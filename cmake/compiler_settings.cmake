@@ -1,0 +1,18 @@
+function (setup_compilers)
+  if(APPLE)
+    set(CMAKE_C_COMPILER "/usr/local/opt/llvm/bin/clang")
+    set(CMAKE_CXX_COMPILER "/usr/local/opt/llvm/bin/clang++")
+    ##### Imported from RAVE audition plugin. Really necessary?
+    set(MACOSX_RPATH TRUE)
+  endif(APPLE)
+  if (MSVC)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive- ")
+  endif(MSVC)
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+  set(CMAKE_INSTALL_RPATH "@loader_path/../Resources/libtorch")
+
+  set(CMAKE_CXX_FLAGS "-Wall")
+  set(CMAKE_CXX_FLAGS_DEBUG "-g")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+endfunction()
