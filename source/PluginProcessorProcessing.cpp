@@ -83,8 +83,6 @@ void RaveAP::modelPerform() {
     std::cout << "after width : " << latent_noiseL.sizes() << ";"
               << latent_trajL.sizes() << std::endl;
 #endif
-
-    // TODO wait for corrected TS and uncomment these lines
     latent_trajL = torch::cat({latent_trajL, latent_noiseL}, 1);
     latent_trajR = torch::cat({latent_trajR, latent_noiseR}, 1);
 

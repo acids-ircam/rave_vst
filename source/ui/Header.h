@@ -26,8 +26,9 @@ public:
               .withTitle("Information:")
               .withMessage(
                   "RAVE VST - acids team - ircam\nUI dev: Jb Dupuy\nAudio "
-                  "engine: Axel Chemla\nRAVE: Antoine Caillon\n\nversion "
-                  "0.0.1-brc45-a1 BETA\n2022 - license CCBY4.0")
+                  "engine: Axel Chemla Romeu Santos\nRAVE: Antoine "
+                  "Caillon\n\nversion "
+                  "0.1 BETA\n2022 - license CC-BY-NC-4.0")
               .withButton("OK"),
           nullptr);
     };
