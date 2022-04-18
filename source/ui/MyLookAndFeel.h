@@ -17,7 +17,6 @@ public:
     setColour(ListBox::backgroundColourId, DARKER_STRONG);
     // Sliders
     setColour(Slider::textBoxOutlineColourId, TRANSPARENT);
-    // setColour(Slider::textBoxTextColourId, WHITE);
     // Label
     setColour(Label::textColourId, WHITE);
     // ComboBox
@@ -32,15 +31,82 @@ public:
     setColour(PopupMenu::highlightedBackgroundColourId, LIGHTER);
     setColour(PopupMenu::highlightedTextColourId, BLACK);
     // TextButton
-    setColour(TextButton::buttonColourId, DARKER);
-    setColour(TextButton::buttonOnColourId, DARKER);
+    setColour(TextButton::buttonColourId, DARKER_STRONG);
+    setColour(TextButton::buttonOnColourId, DARKER_STRONG);
     setColour(TextButton::textColourOnId, WHITE);
     setColour(TextButton::textColourOffId, WHITE);
-    // Font
-    // static auto typeface = Typeface::createSystemTypefaceFor(
-    //     BinaryData::GulaxRegular_otf, BinaryData::GulaxRegular_otfSize);
-    // BinaryData::KarrikRegular_ttf, BinaryData::KarrikRegular_ttfSize);
-    // setDefaultSansSerifTypeface(typeface);
+  }
+
+  // It's almost the same as the default one, but we remove the ugly tick for
+  // the selected item
+  void drawPopupMenuItem(Graphics &g, const Rectangle<int> &area,
+                         const bool isSeparator, const bool isActive,
+                         const bool isHighlighted, const bool isTicked,
+                         const bool hasSubMenu, const String &text,
+                         const String &shortcutKeyText, const Drawable *icon,
+                         const Colour *const textColourToUse) {
+    if (isSeparator) {
+      Rectangle<int> r(area.reduced(5, 0));
+      r.removeFromTop(r.getHeight() / 2 - 1);
+
+      g.setColour(Colour(0x33000000));
+      g.fillRect(r.removeFromTop(1));
+
+      g.setColour(Colour(0x66ffffff));
+      g.fillRect(r.removeFromTop(1));
+    } else {
+      Colour textColour(findColour(PopupMenu::textColourId));
+      if (textColourToUse != nullptr)
+        textColour = *textColourToUse;
+      Rectangle<int> r(area.reduced(1));
+      if (isHighlighted) {
+        g.setColour(findColour(PopupMenu::highlightedBackgroundColourId));
+        g.fillRect(r);
+        g.setColour(findColour(PopupMenu::highlightedTextColourId));
+      } else {
+        g.setColour(textColour);
+      }
+      if (!isActive)
+        g.setOpacity(0.3f);
+      Font font(getPopupMenuFont());
+      const float maxFontHeight = area.getHeight() / 1.3f;
+      if (font.getHeight() > maxFontHeight)
+        font.setHeight(maxFontHeight);
+      g.setFont(font);
+      Rectangle<float> iconArea(
+          r.removeFromLeft((r.getHeight() * 5) / 4).reduced(3).toFloat());
+      if (icon != nullptr) {
+        icon->drawWithin(g, iconArea,
+                         RectanglePlacement::centred |
+                             RectanglePlacement::onlyReduceInSize,
+                         1.0f);
+      } else if (isTicked) {
+        const Path selectedSymbol;
+        g.fillPath(selectedSymbol,
+                   selectedSymbol.getTransformToScaleToFit(iconArea, true));
+      }
+      if (hasSubMenu) {
+        const float arrowH = 0.6f * getPopupMenuFont().getAscent();
+
+        const float x = (float)r.removeFromRight((int)arrowH).getX();
+        const float halfH = (float)r.getCentreY();
+
+        Path p;
+        p.addTriangle(x, halfH - arrowH * 0.5f, x, halfH + arrowH * 0.5f,
+                      x + arrowH * 0.6f, halfH);
+
+        g.fillPath(p);
+      }
+      r.removeFromRight(3);
+      g.drawFittedText(text, r, Justification::centredLeft, 1);
+      if (shortcutKeyText.isNotEmpty()) {
+        Font f2(font);
+        f2.setHeight(f2.getHeight() * 0.75f);
+        f2.setHorizontalScale(0.95f);
+        g.setFont(f2);
+        g.drawText(shortcutKeyText, r, Justification::centredRight, true);
+      }
+    }
   }
 
   void drawRotarySlider(Graphics &g, int x, int y, int width, int height,
@@ -91,7 +157,6 @@ public:
   DarkLookAndFeel() : _stroke(STROKES_THICKNESS * 2.5) {
     // Sliders
     setColour(Slider::textBoxOutlineColourId, TRANSPARENT);
-    // setColour(Slider::textBoxTextColourId, WHITE);
     // Label
     setColour(Label::textColourId, BLACK);
     // ComboBox
@@ -114,11 +179,6 @@ public:
     setColour(TextButton::buttonOnColourId, TRANSPARENT);
     setColour(TextButton::textColourOnId, BLACK);
     setColour(TextButton::textColourOffId, BLACK);
-    // Font
-    // static auto typeface = Typeface::createSystemTypefaceFor(
-    //     BinaryData::GulaxRegular_otf, BinaryData::GulaxRegular_otfSize);
-    // BinaryData::KarrikRegular_ttf, BinaryData::KarrikRegular_ttfSize);
-    // setDefaultSansSerifTypeface(typeface);
   }
 
   void drawPopupMenuItem(Graphics &g, const Rectangle<int> &area,
@@ -138,36 +198,25 @@ public:
       g.fillRect(r.removeFromTop(1));
     } else {
       Colour textColour(findColour(PopupMenu::textColourId));
-
       if (textColourToUse != nullptr)
         textColour = *textColourToUse;
-
       Rectangle<int> r(area.reduced(1));
-
       if (isHighlighted) {
         g.setColour(findColour(PopupMenu::highlightedBackgroundColourId));
         g.fillRect(r);
-
         g.setColour(findColour(PopupMenu::highlightedTextColourId));
       } else {
         g.setColour(textColour);
       }
-
       if (!isActive)
         g.setOpacity(0.3f);
-
       Font font(getPopupMenuFont());
-
       const float maxFontHeight = area.getHeight() / 1.3f;
-
       if (font.getHeight() > maxFontHeight)
         font.setHeight(maxFontHeight);
-
       g.setFont(font);
-
       Rectangle<float> iconArea(
           r.removeFromLeft((r.getHeight() * 5) / 4).reduced(3).toFloat());
-
       if (icon != nullptr) {
         icon->drawWithin(g, iconArea,
                          RectanglePlacement::centred |
@@ -178,7 +227,6 @@ public:
         g.fillPath(selectedSymbol,
                    selectedSymbol.getTransformToScaleToFit(iconArea, true));
       }
-
       if (hasSubMenu) {
         const float arrowH = 0.6f * getPopupMenuFont().getAscent();
 
@@ -191,16 +239,13 @@ public:
 
         g.fillPath(p);
       }
-
       r.removeFromRight(3);
       g.drawFittedText(text, r, Justification::centredLeft, 1);
-
       if (shortcutKeyText.isNotEmpty()) {
         Font f2(font);
         f2.setHeight(f2.getHeight() * 0.75f);
         f2.setHorizontalScale(0.95f);
         g.setFont(f2);
-
         g.drawText(shortcutKeyText, r, Justification::centredRight, true);
       }
     }

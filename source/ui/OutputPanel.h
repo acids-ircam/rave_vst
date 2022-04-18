@@ -1,6 +1,6 @@
 #pragma once
-#include "./components/SliderGroup.h"
 #include "GUI_GLOBALS.h"
+#include "SliderGroup.h"
 
 #include <JuceHeader.h>
 using namespace juce;
@@ -13,19 +13,15 @@ public:
   OutputPanel(RaveAP & /*audioProcessor*/)
       : _outputGain("Gain", " dB", rave_parameters::output_gain),
         _dryWet("Dry/Wet", "%", rave_parameters::output_drywet, 0) {
-    // _vuMeter(audioProcessor, false) {
-
-    _LimitToggleButton.setButtonText("Limit");
 
     // setup labels
+    _LimitToggleButton.setButtonText("Limit");
     _titleLabel.setText("Output Parameters",
                         NotificationType::dontSendNotification);
 
     addAndMakeVisible(_titleLabel);
-    // addAndMakeVisible(_LimitToggleButton);
     addAndMakeVisible(_outputGain);
     addAndMakeVisible(_dryWet);
-    // addAndMakeVisible(_vuMeter);
   }
 
   void connectVTS(AudioProcessorValueTreeState &vts) {
@@ -62,13 +58,7 @@ public:
   }
 
   void paint(juce::Graphics &g) {
-    // g.fillAll(GREEN);
-
     auto b_area = getLocalBounds().toFloat();
-    // g.setColour(LIGHTER_STRONG);
-    // g.fillRect(b_area);
-    // g.drawRoundedRectangle(b_area, CORNER_RADIUS, BORDER_THICKNESS);
-
     // Title line
     b_area = b_area.withTrimmedRight(UI_MARGIN_SIZE);
     b_area = b_area.withTrimmedLeft(UI_MARGIN_SIZE);
@@ -89,8 +79,6 @@ private:
 
   Label _titleLabel;
   Label _limitLabel;
-
-  // VuMeter _vuMeter;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OutputPanel)
 };

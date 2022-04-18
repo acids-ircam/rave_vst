@@ -87,12 +87,14 @@ public:
     // Reduce size to center them vertically a bit more
     b_top.removeFromTop(UI_MARGIN_SIZE * 8);
 
-    auto prior = b_top.removeFromBottom(UI_MARGIN_SIZE * 4);
-    _togglePrior.setBounds(prior.withTrimmedLeft(UI_MARGIN_SIZE * 1));
+    auto prior = b_top.removeFromBottom(UI_MARGIN_SIZE * 3);
+    _togglePrior.setBounds(prior.withTrimmedLeft(UI_MARGIN_SIZE));
 
     _latentJitter.setBounds(b_top.removeFromLeft(UI_SLIDER_GROUP_HEIGHT));
     _width.setBounds(b_top.removeFromRight(UI_SLIDER_GROUP_HEIGHT));
 
+    // Put latent controls lower
+    b_col1.removeFromTop(UI_MARGIN_SIZE * 3);
     auto b_col1Left = b_col1.removeFromLeft(UI_SLIDER_GROUP_HEIGHT);
     auto b_col1Right = b_col1.removeFromRight(UI_SLIDER_GROUP_HEIGHT);
     for (size_t i = 0; i < _latentsNbr; i++) {

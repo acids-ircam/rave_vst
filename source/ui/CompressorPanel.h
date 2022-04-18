@@ -5,32 +5,24 @@
 
 using namespace juce;
 
-class InputPanel : public juce::Component {
+class CompressorPanel : public juce::Component {
   typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
-  typedef AudioProcessorValueTreeState::ComboBoxAttachment ComboBoxAttachment;
 
 public:
-  InputPanel(RaveAP & /*audioProcessor*/)
-      : _inputGain("Gain", " dB", rave_parameters::input_gain) {
-    for (int i = 0; i < channel_modes.size(); i++) {
-      _channelsComboBox.addItem(channel_modes[i], i + 1);
-    }
-    _titleLabel.setText("Input Parameters",
+  CompressorPanel()
+      : _compressorThreshold("Threshold", " dB", rave_parameters::input_thresh),
+        _compressorRatio("Ratio", ":1", rave_parameters::input_ratio) {
+    _titleLabel.setText("Compressor Parameters",
                         NotificationType::dontSendNotification);
-    _channelsLabel.setText("Channel mode",
-                           NotificationType::dontSendNotification);
-
     addAndMakeVisible(_titleLabel);
 
-    addAndMakeVisible(_inputGain);
-    addAndMakeVisible(_channelsLabel);
-    addAndMakeVisible(_channelsComboBox);
+    addAndMakeVisible(_compressorThreshold);
+    addAndMakeVisible(_compressorRatio);
   }
 
   void connectVTS(AudioProcessorValueTreeState &vts) {
-    _inputGain.connectVTS(vts);
-    _channelsAttachment.reset(new ComboBoxAttachment(
-        vts, rave_parameters::channel_mode, _channelsComboBox));
+    _compressorThreshold.connectVTS(vts);
+    _compressorRatio.connectVTS(vts);
   }
 
   void resized() override {
@@ -45,9 +37,8 @@ public:
     auto b_row1 = b_area.removeFromTop(UI_TEXT_HEIGHT + UI_SLIDER_GROUP_HEIGHT);
     auto b_colLeft1 = b_row1.removeFromLeft(columnWidth);
     auto b_colRight1 = b_row1.removeFromRight(columnWidth);
-    _inputGain.setBounds(b_colLeft1);
-    _channelsLabel.setBounds(b_colRight1.removeFromTop(UI_TEXT_HEIGHT));
-    _channelsComboBox.setBounds(b_colRight1.removeFromTop(UI_TEXT_HEIGHT));
+    _compressorThreshold.setBounds(b_colLeft1);
+    _compressorRatio.setBounds(b_colRight1);
   }
 
   void paint(juce::Graphics &g) {
@@ -62,12 +53,11 @@ public:
   }
 
 private:
-  SliderGroup _inputGain;
-  ComboBox _channelsComboBox;
-  std::unique_ptr<ComboBoxAttachment> _channelsAttachment;
+  SliderGroup _compressorThreshold;
+  SliderGroup _compressorRatio;
 
   Label _titleLabel;
   Label _channelsLabel;
 
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(InputPanel)
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CompressorPanel)
 };

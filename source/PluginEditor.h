@@ -15,6 +15,7 @@
 using namespace juce;
 
 class RaveAPEditor : public juce::AudioProcessorEditor,
+                     public juce::Timer,
                      public juce::ChangeListener {
 public:
   RaveAPEditor(RaveAP &, AudioProcessorValueTreeState &);
@@ -25,11 +26,19 @@ public:
   void log(String str);
   void changeListenerCallback(ChangeBroadcaster *source) override;
 
+protected: 
+  void timerCallback() override;
+
 private:
   void getAvailableModelsFromAPI();
   void downloadModelFromAPI();
   String getCleanedString(String str);
   void detectAvailableModels();
+  void importModel();
+  
+
+  File _modelsDirPath;
+  std::unique_ptr<FileChooser> _fc;
 
   LightLookAndFeel _lightLookAndFeel;
   DarkLookAndFeel _darkLookAndFeel;
@@ -42,8 +51,8 @@ private:
   FoldablePanel _foldablePanel;
   // Model Manager window
   ModelExplorer _modelExplorer;
+  Label _console; 
 
-  File _modelsDirPath;
   Image _bgFull;
 
   StringArray _availableModelsPaths;

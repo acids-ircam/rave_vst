@@ -1,5 +1,5 @@
 #pragma once
-#include "./components/CompressorPanel.h"
+#include "CompressorPanel.h"
 #include "GUI_GLOBALS.h"
 #include "InputPanel.h"
 #include "OutputPanel.h"
@@ -64,17 +64,25 @@ public:
     float modelMinBufferSize = range.getStart();
     float modelMaxBufferSize = range.getEnd();
     int lowestIdx = -1;
+    bool available8192Flag = false;
     for (size_t i = 0; i < _allBufferSizes.size(); i++) {
       auto bufferSize = _allBufferSizes[i];
       _latencyComboBox.addItem(String(bufferSize), i + 1);
       if ((bufferSize < modelMinBufferSize) ||
           (bufferSize > modelMaxBufferSize)) {
         _latencyComboBox.setItemEnabled(i + 1, false);
-      } else if (lowestIdx == -1) {
-        lowestIdx = i;
+      } else {
+        if (lowestIdx == -1)
+          lowestIdx = i;
+        if (bufferSize == 8192)
+          available8192Flag = true;
       }
     }
-    _latencyComboBox.setSelectedItemIndex(lowestIdx);
+    if (available8192Flag == true) {
+      _latencyComboBox.setSelectedItemIndex(4);
+    } else {
+      _latencyComboBox.setSelectedItemIndex(lowestIdx);
+    }
   }
 
   void resized() override {

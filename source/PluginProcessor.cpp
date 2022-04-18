@@ -10,7 +10,7 @@ RaveAP::RaveAP()
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       _avts(*this, nullptr, Identifier("RAVEValueTree"),
             createParameterLayout()),
-      _computeThread(nullptr), _dryWetMixerEffect(4096)
+      _loadedModelName(""), _computeThread(nullptr), _dryWetMixerEffect(BUFFER_LENGTH)
 #endif
 {
   _inBuffer = std::make_unique<circular_buffer<float, float>[]>(1);
@@ -39,8 +39,7 @@ RaveAP::RaveAP()
         rave_parameters::latent_bias + String("_") + std::to_string(i));
   }
   _latencyMode = _avts.getRawParameterValue(rave_parameters::latency_mode);
-  _priorTemperature =
-      _avts.getRawParameterValue(rave_parameters::prior_temperature);
+  _priorTemperature = _avts.getRawParameterValue(rave_parameters::prior_temperature);
   _engineThreadPool = std::make_unique<ThreadPool>(1);
   _rave.reset(new RAVE());
 
@@ -50,6 +49,7 @@ RaveAP::RaveAP()
   _avts.addParameterListener(rave_parameters::output_gain, this);
   _avts.addParameterListener(rave_parameters::output_limit, this);
   _avts.addParameterListener(rave_parameters::output_drywet, this);
+  _avts.addParameterListener(rave_parameters::latency_mode, this);
   _dryWetMixerEffect.setMixingRule(juce::dsp::DryWetMixingRule::balanced);
   _editorReady = false;
 }
@@ -78,6 +78,7 @@ void RaveAP::prepareToPlay(double sampleRate, int samplesPerBlock) {
   _compressorEffect.setThreshold(_thresholdValue->load());
   _outputGainEffect.setGainDecibels(_outputGainValue->load());
   _dryWetMixerEffect.setWetMixProportion(_dryWetValue->load() / 100.f);
+  setLatencySamples(pow(2, *_latencyMode));
 }
 
 void RaveAP::releaseResources() {
@@ -89,6 +90,16 @@ void RaveAP::releaseResources() {
   _compressorEffect.reset();
   _dryWetMixerEffect.reset();
 }
+
+juce::String valueToTextFunction(float value) {
+    return juce::String(value);
+}
+
+float textToValueFunction (const String &value) {
+    return value.getFloatValue();
+}
+
+
 
 AudioProcessorValueTreeState::ParameterLayout RaveAP::createParameterLayout() {
   std::vector<std::unique_ptr<RangedAudioParameter>> params;
@@ -117,7 +128,7 @@ AudioProcessorValueTreeState::ParameterLayout RaveAP::createParameterLayout() {
       100.f, 100.f));
   params.push_back(std::make_unique<AudioParameterBool>(
       rave_parameters::output_limit, rave_parameters::output_limit, true));
-  params.push_back(std::make_unique<AudioParameterInt>(
+  params.push_back(std::make_unique<NAAudioParameterInt>(
       rave_parameters::latency_mode, rave_parameters::latency_mode, 9, 15, 13));
   params.push_back(std::make_unique<AudioParameterBool>(
       rave_parameters::use_prior, rave_parameters::use_prior, false));
@@ -139,7 +150,7 @@ AudioProcessorValueTreeState::ParameterLayout RaveAP::createParameterLayout() {
   return {params.begin(), params.end()};
 }
 
-// This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() {
+  // This creates new instances of the plugin..
   return new RaveAP();
 }

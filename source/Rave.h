@@ -133,7 +133,7 @@ public:
 
   float zPerSeconds() { return encode_params.index({3}).item<float>() / sr; }
 
-  int getFullLatentDimensions() { return latent_size;}
+  int getFullLatentDimensions() { return latent_size; }
 
   int getInputBatches() { return encode_params.index({1}).item<int>(); }
 
@@ -149,8 +149,6 @@ public:
       latent_buffer = latent_buffer.index(
           {"...", Slice(-MAX_LATENT_BUFFER_SIZE, None, None)});
     }
-    // std::cout << "latent buffer size : " << latent_buffer.sizes() <<
-    // std::endl;
   }
 
   bool hasPrior() { return has_prior; }

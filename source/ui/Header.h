@@ -24,11 +24,10 @@ public:
           MessageBoxOptions()
               .withIconType(MessageBoxIconType::InfoIcon)
               .withTitle("Information:")
-              .withMessage(
-                  "RAVE VST - acids team - ircam\nUI dev: Jb Dupuy\nAudio "
-                  "engine: Axel Chemla Romeu Santos\nRAVE: Antoine "
-                  "Caillon\n\nversion "
-                  "0.1 BETA\n2022 - license CC-BY-NC-4.0")
+              .withMessage("RAVE VST - ACIDS team - IRCAM\nUI: Jb Dupuy\nAudio "
+                           "engine: Axel Chemla Romeu Santos\nRAVE: Antoine "
+                           "Caillon\n\nVersion "
+                           "0.1 BETA\n2022 - License CC-BY-NC-4.0")
               .withButton("OK"),
           nullptr);
     };

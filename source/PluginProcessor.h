@@ -34,9 +34,24 @@ const String prior_temperature{"prior_temperature"};
 
 namespace rave_ranges {
 const NormalisableRange<float> gainRange(-70.f, 12.f);
-const NormalisableRange<float> latentScaleRange(-5.0f, 5.0f);
-const NormalisableRange<float> latentBiasRange(-5.0f, 5.0f);
+const NormalisableRange<float> latentScaleRange(0.0f, 5.0f);
+const NormalisableRange<float> latentBiasRange(-3.0f, 3.0f);
 } // namespace rave_ranges
+
+class NAAudioParameterInt: public juce::AudioParameterInt {
+  public: 
+    NAAudioParameterInt(const String &parameterID,
+                        const String &parameterName,
+                        int minValue, int maxValue, 
+                        int defaultValue, const String &parameterLabel=String(), 
+                        std::function< String(int value, int maximumStringLength)> stringFromInt=nullptr,
+                        std::function< int(const String &text)> intFromString=nullptr): 
+                        juce::AudioParameterInt(parameterID, parameterName, minValue, maxValue, defaultValue, parameterLabel, stringFromInt, intFromString)  
+    {}
+
+    bool isAutomatable() const override { return false; }
+};
+
 
 class RaveAP : public juce::AudioProcessor,
                public juce::AudioProcessorValueTreeState::Listener {
@@ -90,6 +105,7 @@ public:
   float _inputAmplitudeR;
   float _outputAmplitudeL;
   float _outputAmplitudeR;
+  bool _plays = false; 
 
   double getSampleRate() { return _sampleRate; }
 
@@ -97,6 +113,7 @@ private:
   mutable CriticalSection _engineUpdateMutex;
   juce::AudioProcessorValueTreeState _avts;
   std::unique_ptr<juce::ThreadPool> _engineThreadPool;
+  std::string _loadedModelName;
 
   /*
    *Allocate some memory to use as the circular_buffer storage

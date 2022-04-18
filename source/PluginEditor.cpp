@@ -30,16 +30,13 @@ RaveAPEditor::RaveAPEditor(RaveAP &p, AudioProcessorValueTreeState &vts)
     getAvailableModelsFromAPI();
   }
 
-  LookAndFeel::setDefaultLookAndFeel(&_darkLookAndFeel);
-  // setDefaultLookAndFeel is needed to enable the custom font, otherwise it
-  // does not work ???? And if I only use the following commands, the sliders
-  // don't get the LookAndFeel either ???
   _header.setLookAndFeel(&_darkLookAndFeel);
   _modelPanel.setLookAndFeel(&_darkLookAndFeel);
   _modelExplorer.setLookAndFeel(&_lightLookAndFeel);
   _foldablePanel.setLookAndFeel(&_lightLookAndFeel);
 
   _modelExplorer._downloadButton.onClick = [this]() { downloadModelFromAPI(); };
+  _modelExplorer._importButton.onClick = [this]() { importModel(); };
 
   _modelPanel.setSampleRate(p.getSampleRate());
 
@@ -79,14 +76,48 @@ RaveAPEditor::RaveAPEditor(RaveAP &p, AudioProcessorValueTreeState &vts)
   addAndMakeVisible(_header);
   addAndMakeVisible(_modelPanel);
   addAndMakeVisible(_foldablePanel);
+  addAndMakeVisible(_console);
   addChildComponent(_modelExplorer);
 
   setResizable(false, false);
   getConstrainer()->setMinimumSize(996, 560);
   setSize(996, 560);
+  startTimer(100.);
 }
 
 RaveAPEditor::~RaveAPEditor() { curl_easy_cleanup(_curl); }
+
+void RaveAPEditor::importModel() {
+  _fc.reset(new FileChooser(
+      "Choose your model file",
+      File::getSpecialLocation(File::SpecialLocationType::userHomeDirectory),
+      "*.ts", true));
+
+  _fc->launchAsync(
+      FileBrowserComponent::openMode | FileBrowserComponent::canSelectFiles,
+      [this](const FileChooser &chooser) {
+        File sourceFile;
+        auto results = chooser.getURLResults();
+
+        for (auto result : results) {
+          if (result.isLocalFile()) {
+            sourceFile = result.getLocalFile();
+          } else {
+            return;
+          }
+        }
+        if (sourceFile.getFileExtension() == ".ts" &&
+            sourceFile.getSize() > 0) {
+          sourceFile.copyFileTo(_modelsDirPath.getNonexistentChildFile(
+              sourceFile.getFileName(), ".ts"));
+          detectAvailableModels();
+        }
+      });
+}
+
+void RaveAPEditor::timerCallback() {
+  _console.setText(String(audioProcessor.getLatencySamples()), juce::dontSendNotification);
+}
 
 void RaveAPEditor::resized() {
   // Child components should not handle margins, do it here
@@ -110,6 +141,7 @@ void RaveAPEditor::resized() {
                .withTrimmedBottom(UI_MARGIN_SIZE);
   _foldablePanel.setBounds(
       b_area.removeFromRight(columnWidth + UI_MARGIN_SIZE));
+  _console.setBounds(0, getLocalBounds().getHeight() - 20, getLocalBounds().getWidth(), 20);
 }
 
 void RaveAPEditor::paint(juce::Graphics &g) {
@@ -119,15 +151,16 @@ void RaveAPEditor::paint(juce::Graphics &g) {
 
 void RaveAPEditor::log(String /*str*/) {}
 
-void RaveAPEditor::changeListenerCallback(
-    ChangeBroadcaster* /*source*/) {
+void RaveAPEditor::changeListenerCallback(ChangeBroadcaster * /*source*/) {
   _modelPanel.updateModel();
   if (audioProcessor._rave != nullptr) {
-    _foldablePanel.setBufferSizeRange(audioProcessor._rave->getValidBufferSizes());
+    _foldablePanel.setBufferSizeRange(
+        audioProcessor._rave->getValidBufferSizes());
   }
 }
 
 // Directory search functions
+
 bool pathExist(const std::string &s) {
   struct stat buffer;
   return (stat(s.c_str(), &buffer) == 0);
