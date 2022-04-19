@@ -33,41 +33,45 @@ Those two channels have the same input but the random sampling differences will 
 
 -----
 ##### Model Explorer
-**Feature not yet available:** The Model Explorer Button switches to the model explorer window. When available you will be able to download a selection of models directly from the VST  
+The Model Explorer Button switches to the model explorer window.   
+- **Model download (Feature not yet available):**  
+When the beta will be over you will be able to download a selection of models directly from the VST  
+- **Custom models import:**  
+Right now you can use this window to select your custom models, this will put them in the right folder and refresh the available models list  
+If you want to manage yourself your local models, the files are located in ``~/.config/ACIDS/RAVE/`` (UNIX) and ``~/Library/Application Support/ACIDS/RAVE/`` (MacOS)
 
-Right now you can use this window to select your custom models, this will put them in the right folder and refresh the available models list
+-----
+##### Using your own trained models  
+If you want to be able to use your [trained models](https://github.com/acids-ircam/RAVE) in the VST **you have to [export them](https://github.com/acids-ircam/RAVE/blob/master/export_rave.py#L21) with the ``--stereo true`` flag**  
+Then use the VST import button to move the files in the correct folder as explained in the previous section
 
 -----
 ### 2) How to build
-- **MacOS 10.15.7**: Cmake 3.21.3, Clang 11.0.3, Xcode 11.7  
-  - VST & AU & Standalone
-- **Ubuntu**: Cmake, g++
-  - VST & Standalone  
-- **Fedora 33** (Kernel 5.14.1A8): Cmake 3.19.7, g++ 10.3.1  
-  - Standalone
-  - Needed dependencies:
-  git
-cmake
-g++
-libX11-devel
-libXrandr-devel
-libXinerama-devel
-libXcursor-devel
-freetype-devel
-libcurl-devel
-alsa-lib-devel
+We use Cmake for the build process  
+PyTorch libraries (And MKL if you're on UNIX) will be downloaded automatically  
+
+Tested environments:
+
+| OS                 | CMake  | C++ Compiler | Available formats     | Notes |
+|--------------------|--------|--------------|-----------------------|-------|
+| MacOS 10.15.7      | 3.21.3 | Clang 11.0.3 | VST / Standalone / AU |       |
+| Ubuntu 20.04.4 LTS |        |              | VST / Standalone      |       |
+| Fedora 33          | 3.19.7 | G++ 10.3.1   | Standalone            |       |
 
 
-We're using Cmake for the build process  
-It will automatically download the PyTorch libraries (And MKL if you're on UNIX)  
+#### 1) Install needed dependencies:
+- Fedora:  
+`sudo dnf update ; sudo dnf install git cmake g++ libX11-devel libXrandr-devel libXinerama-devel libXcursor-devel freetype-devel libcurl-devel alsa-lib-devel`
 
-- Get juce:  
-`git submodule update --init --recursive`
-- Setup the build:  
+#### 2) Clone the repository:
+`cd {YOUR_INSTALL_FOLDER} ; git clone git@github.com:acids-ircam/rave_vst.git ; cd rave_vst`
+
+#### 3) Get Juce:  
+`git submodule update --init --recursive --progress`
+
+#### 4) Setup the build:  
 `mkdir build; cd build`  
 `cmake .. -DCMAKE_BUILD_TYPE=Release`
 
-- Build:  
-  - Unix: `cmake --build . --config Release -j 4`
-  - MacOs:
- `cmake -G Xcode -B build`
+#### 5) Build:  
+`cmake --build . --config Release -j 4`
