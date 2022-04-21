@@ -1,0 +1,39 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Install needed dependencies
+        run: apt-get update && apt-get install -y nodejs git cmake pkg-config g++ libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libfreetype-dev libcurl4-openssl-dev libasound2-dev
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
+      - name: Clone the repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setup the build
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        working-directory: build
+        run: cmake --build . --config Release -j 4
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release
+          path: build/rave-vst_artefacts/Release
