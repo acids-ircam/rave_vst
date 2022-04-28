@@ -22,13 +22,7 @@ RaveAPEditor::RaveAPEditor(RaveAP &p, AudioProcessorValueTreeState &vts)
     _modelsDirPath.createDirectory();
   }
 
-  // Network
-  _curl = curl_easy_init();
-  if (!_curl) {
-    std::cerr << "[-] Network - Curl initialization failed" << '\n';
-  } else {
-    getAvailableModelsFromAPI();
-  }
+  getAvailableModelsFromAPI();
 
   _header.setLookAndFeel(&_darkLookAndFeel);
   _modelPanel.setLookAndFeel(&_darkLookAndFeel);
@@ -82,10 +76,10 @@ RaveAPEditor::RaveAPEditor(RaveAP &p, AudioProcessorValueTreeState &vts)
   setResizable(false, false);
   getConstrainer()->setMinimumSize(996, 560);
   setSize(996, 560);
-  startTimer(100.);
+  // startTimer(100.);
 }
 
-RaveAPEditor::~RaveAPEditor() { curl_easy_cleanup(_curl); }
+RaveAPEditor::~RaveAPEditor() {}
 
 void RaveAPEditor::importModel() {
   _fc.reset(new FileChooser(
@@ -115,9 +109,12 @@ void RaveAPEditor::importModel() {
       });
 }
 
+/*
 void RaveAPEditor::timerCallback() {
-  _console.setText(String(audioProcessor.getLatencySamples()), juce::dontSendNotification);
+  //_console.setText(String(audioProcessor.getLatencySamples()),
+juce::dontSendNotification);
 }
+*/
 
 void RaveAPEditor::resized() {
   // Child components should not handle margins, do it here
@@ -141,7 +138,8 @@ void RaveAPEditor::resized() {
                .withTrimmedBottom(UI_MARGIN_SIZE);
   _foldablePanel.setBounds(
       b_area.removeFromRight(columnWidth + UI_MARGIN_SIZE));
-  _console.setBounds(0, getLocalBounds().getHeight() - 20, getLocalBounds().getWidth(), 20);
+  _console.setBounds(0, getLocalBounds().getHeight() - 20,
+                     getLocalBounds().getWidth(), 20);
 }
 
 void RaveAPEditor::paint(juce::Graphics &g) {
@@ -154,6 +152,9 @@ void RaveAPEditor::log(String /*str*/) {}
 void RaveAPEditor::changeListenerCallback(ChangeBroadcaster * /*source*/) {
   _modelPanel.updateModel();
   if (audioProcessor._rave != nullptr) {
+    // std::cout << "set prior in changeListenerCallback to" <<
+    // audioProcessor._rave->hasPrior() << std::endl;
+    //_modelPanel.setPriorEnabled(audioProcessor._rave->hasPrior());
     _foldablePanel.setBufferSizeRange(
         audioProcessor._rave->getValidBufferSizes());
   }

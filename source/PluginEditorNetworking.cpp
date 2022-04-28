@@ -1,22 +1,5 @@
 #include "PluginEditor.h"
 
-String RaveAPEditor::getCleanedString(String str) {
-  int len = str.length();
-
-  std::string tmp1 = str.toStdString();
-  char *tmp = tmp1.data();
-  // THE CODE ABOVE WORKS!
-  // BUT THE CODE NEXT LINE DOES NOT WORK?????
-  // char *tmp = str.toStdString().data();
-  // We get a random string everytime if we transform to std::string then
-  // char* in the same line. Something something pointers management in juce?
-
-  tmp = curl_easy_escape(_curl, tmp, len);
-  String res = String(tmp);
-  curl_free(tmp);
-  return res;
-}
-
 void RaveAPEditor::downloadModelFromAPI() {
   if (_modelExplorer._modelsVariationsData.size() < 1) {
     std::cout << "[ ] Network - No models available for download" << std::endl;
@@ -34,24 +17,24 @@ void RaveAPEditor::downloadModelFromAPI() {
   String modelVariation =
       _modelExplorer
           ._modelsVariationsNames[_modelExplorer._modelsList.getSelectedRow()];
-  String url = "http://127.0.0.1:8080/get_model?model_name=" +
-               getCleanedString(modelName) + String("&model_variation=") +
-               getCleanedString(modelVariation);
-  curl_easy_setopt(_curl, CURLOPT_URL, url.toStdString().c_str());
-  curl_easy_setopt(_curl, CURLOPT_ERRORBUFFER, &_curlErrorBuffer);
-  curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, writeToFileCallback);
+  String tmp_url = "http://127.0.0.1:8080/get_model?model_name=" +
+                   URL::addEscapeChars(modelName, true, false) +
+                   String("&model_variation=") +
+                   URL::addEscapeChars(modelVariation, true, false);
+  URL url = URL(tmp_url);
+
   // TODO: Clean up the path handling, avoid using String concatenation for that
   String outputFilePath = _modelsDirPath.getFullPathName() + String("/") +
                           modelVariation + String(".ts");
-  std::cout << outputFilePath << '\n';
-  FILE *fp = fopen(outputFilePath.toStdString().c_str(), "wb");
-  curl_easy_setopt(_curl, CURLOPT_WRITEDATA, fp);
-  _curlFlag = curl_easy_perform(_curl);
-  fclose(fp);
+  std::cout << "DOWNLOADING TO: " << outputFilePath << '\n';
+  // FILE *fp = fopen(outputFilePath.toStdString().c_str(), "wb");
+  File outputFile = File(outputFilePath);
+  std::unique_ptr<URL::DownloadTask> res =
+      url.downloadToFile(outputFile, URL::DownloadTaskOptions());
 
-  if (_curlFlag == CURLE_OK) {
+  if (!res->hadError()) {
     AlertWindow::showAsync(MessageBoxOptions()
-                               .withIconType(MessageBoxIconType::WarningIcon)
+                               .withIconType(MessageBoxIconType::InfoIcon)
                                .withTitle("Information:")
                                .withMessage("Model successfully downloaded")
                                .withButton("OK"),
@@ -59,14 +42,11 @@ void RaveAPEditor::downloadModelFromAPI() {
     std::cout << "[+] Network - Model downloaded" << std::endl;
     detectAvailableModels();
   } else {
-    std::cerr << "[-] Network - Failed to download model: " << _curlErrorBuffer
-              << ". (ERRCODE " << _curlFlag << ")" << std::endl
-              << url << std::endl;
+    std::cerr << "[-] Network - Failed to download model" << std::endl;
     AlertWindow::showAsync(MessageBoxOptions()
                                .withIconType(MessageBoxIconType::WarningIcon)
                                .withTitle("Network Warning:")
-                               .withMessage("Failed to download model: " +
-                                            String(_curlErrorBuffer))
+                               .withMessage("Failed to download model")
                                .withButton("OK"),
                            nullptr);
     return;
@@ -74,18 +54,12 @@ void RaveAPEditor::downloadModelFromAPI() {
 }
 
 void RaveAPEditor::getAvailableModelsFromAPI() {
-  curl_easy_setopt(_curl, CURLOPT_URL,
-                   "http://127.0.0.1:8080/get_available_models");
-  curl_easy_setopt(_curl, CURLOPT_ERRORBUFFER, &_curlErrorBuffer);
-  curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-  curl_easy_setopt(_curl, CURLOPT_WRITEDATA, &_readBuffer);
-  _curlFlag = curl_easy_perform(_curl);
-
-  if (_curlFlag == CURLE_OK) {
+  URL url("http://127.0.0.1:8080/get_available_models");
+  String res = url.readEntireTextStream();
+  if (res.length() > 0) {
     std::cout << "[ ] Network - Received API response" << std::endl;
   } else {
-    std::cerr << "[-] Network - No API response: " << _curlErrorBuffer
-              << ". (ERRCODE " << _curlFlag << ")" << std::endl;
+    std::cerr << "[-] Network - No API response" << std::endl;
     // Disabled for the beta, as we won't activate the api
     // AlertWindow::showAsync(
     //     MessageBoxOptions()
@@ -97,7 +71,7 @@ void RaveAPEditor::getAvailableModelsFromAPI() {
     return;
   }
 
-  if (JSON::parse(_readBuffer, _parsedJson).wasOk()) {
+  if (JSON::parse(res, _parsedJson).wasOk()) {
     Array<juce::var> &available_models =
         *_parsedJson["available_models"].getArray();
     std::cout << "[+] Network - Successfully parsed JSON, "

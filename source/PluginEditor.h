@@ -7,7 +7,6 @@
 #include "ui/ModelExplorer.h"
 #include "ui/ModelPanel.h"
 #include "ui/MyLookAndFeel.h"
-#include <curl/curl.h>
 #include <sys/stat.h>
 
 #include <JuceHeader.h>
@@ -15,7 +14,7 @@
 using namespace juce;
 
 class RaveAPEditor : public juce::AudioProcessorEditor,
-                     public juce::Timer,
+                     // public juce::Timer,
                      public juce::ChangeListener {
 public:
   RaveAPEditor(RaveAP &, AudioProcessorValueTreeState &);
@@ -26,8 +25,10 @@ public:
   void log(String str);
   void changeListenerCallback(ChangeBroadcaster *source) override;
 
-protected: 
-  void timerCallback() override;
+  /*
+  protected:
+    void timerCallback() override;
+  */
 
 private:
   void getAvailableModelsFromAPI();
@@ -35,7 +36,6 @@ private:
   String getCleanedString(String str);
   void detectAvailableModels();
   void importModel();
-  
 
   File _modelsDirPath;
   std::unique_ptr<FileChooser> _fc;
@@ -51,19 +51,13 @@ private:
   FoldablePanel _foldablePanel;
   // Model Manager window
   ModelExplorer _modelExplorer;
-  Label _console; 
+  Label _console;
 
   Image _bgFull;
 
   StringArray _availableModelsPaths;
   StringArray _availableModels;
 
-  // Network
-  CURL *_curl;
-  CURLcode _curlFlag;
-  std::string _readBuffer;
-  std::string _downloadBuffer;
-  char _curlErrorBuffer[CURL_ERROR_SIZE];
   juce::var _parsedJson;
 
   static size_t WriteCallback(void *contents, size_t size, size_t nmemb,

@@ -1,5 +1,6 @@
 #include "PluginEditor.h"
 #include "PluginProcessor.h"
+#include <algorithm>
 #include <math.h>
 
 #define DEBUG_PERFORM 0
@@ -50,7 +51,7 @@ void RaveAP::modelPerform() {
 
     // Latent modifications
     // apply scale and bias
-    int64_t n_dimensions = latent_traj.size(1);
+    int64_t n_dimensions = std::min((int)latent_traj.size(1), (int)AVAILABLE_DIMS);
     for (int i = 0; i < n_dimensions; i++) {
       // The assert and casting here is needed as I got a:
       // warning: conversion to ‘std::array<std::atomic<float>*,

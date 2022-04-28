@@ -26,8 +26,12 @@ public:
       std::cerr << "error loading the model\n";
       return;
     }
+
     this->model_path = juce::String(rave_model_file);
     auto named_buffers = this->model.named_buffers();
+    this->has_prior = false;
+    this->prior_params = torch::zeros({0});
+
     for (auto const &i : named_buffers) {
       if (i.name == "_rave.latent_size") {
         this->latent_size = i.value.item<int>();
@@ -50,10 +54,10 @@ public:
       }
       if (i.name == "prior_params") {
         this->prior_params = i.value;
-        has_prior = true;
+        this->has_prior = true;
         std::cout << "[ ] RAVE - Prior parameters " << this->prior_params
                   << std::endl;
-      }
+      } 
     }
     std::cout << "[+] RAVE - Model successfully loaded: " << rave_model_file
               << std::endl;
@@ -69,6 +73,7 @@ public:
     c10::InferenceMode guard;
     inputs_rave.clear();
     inputs_rave.push_back(torch::ones({1, 1, getModelRatio()}));
+    resetLatentBuffer();
     sendChangeMessage();
   }
 
@@ -139,6 +144,10 @@ public:
 
   int getOutputBatches() { return decode_params.index({3}).item<int>(); }
 
+  void resetLatentBuffer() {
+    latent_buffer = torch::zeros({0});
+  }
+
   void writeLatentBuffer(at::Tensor latent) {
     if (latent_buffer.size(0) == 0) {
       latent_buffer = latent;
@@ -151,7 +160,9 @@ public:
     }
   }
 
-  bool hasPrior() { return has_prior; }
+  bool hasPrior() {
+    return has_prior; 
+  }
 
   at::Tensor getLatentBuffer() { return latent_buffer; }
 

@@ -174,7 +174,6 @@ foreach(kind IN LISTS active_formats)
     endforeach()
 endforeach()
 
-find_package( CURL REQUIRED )
 # `target_link_libraries` links libraries and JUCE modules to other libraries or executables. Here,
 # we're linking our executable target to the `juce::juce_core` module. Inter-module dependencies are
 # resolved automatically. If you'd generated a binary data target above, you would need to link to
@@ -190,11 +189,9 @@ target_link_libraries(${target-name}
         juce::juce_audio_basics
         juce::juce_dsp
         torch
-        CURL::libcurl
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
 
 set(base_folder "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
-# set(base_folder "${CMAKE_CURRENT_BINARY_DIR}/${target-name}-binaries/${CMAKE_BUILD_TYPE}")

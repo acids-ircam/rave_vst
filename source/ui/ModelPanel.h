@@ -309,11 +309,23 @@ public:
     return (size_t)((int)res + 7.0);
   }
 
-  void setModel(RAVE *_rave) { _model = _rave; }
+  void setModel(RAVE *_rave) { 
+    _model = _rave; 
+    updateModel();
+  }
 
-  void updateModel() {}
+  void updateModel() {
+    if (_model != nullptr) {
+      setPriorEnabled(_model->hasPrior());
+    }
+  }
 
   void setSampleRate(double sampleRate) { _sr = sampleRate; }
+
+  void setPriorEnabled(bool value) {
+    _togglePrior.setToggleState(value, juce::dontSendNotification);  
+    _togglePrior.setEnabled(value);
+  }
 
 private:
   RAVE *_model;
