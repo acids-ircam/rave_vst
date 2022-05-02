@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
 project(rave-vst VERSION 0.0.1)
-set (target-name ${PROJECT_NAME})
+set (target_name ${PROJECT_NAME})
+
+##### Compilation options
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
 
 if(APPLE)
   set (formats AU VST3 Standalone)
@@ -8,18 +13,16 @@ else()
   set (formats VST3 Standalone)
 endif()
 
-##### Compilation options
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release")
-endif()
 
 include("cmake/compiler_settings.cmake")
 setup_compilers()
 set(CMAKE_CXX_FLAGS "-fPIC")
-# I need to define CMAKE_CXX_STANDARD here and not in the setup_compilers function
-# as it just does not work? Spent 40mins figuring out
-# why the build wasn't working this way and it still makes no sense
 set(CMAKE_CXX_STANDARD 20)
+# Torch does not compile with C++ standard 20 on Windows
+if (MSVC)
+  set(CMAKE_CXX_STANDARD 17)
+endif (MSVC)
+
 
 ##### Helper function to add all images from a given folder into a JUCE binary data file
 function(add_images_from_directory target imagesSubFolder)
@@ -28,9 +31,6 @@ function(add_images_from_directory target imagesSubFolder)
             "${ImagesDir}/*.jpg"
             "${ImagesDir}/*.png"
             "${ImagesDir}/*.jpeg"
-            # Adding fonts as well
-            "${ImagesDir}/*.ttf"
-            "${ImagesDir}/*.otf"
           )
     if(NOT images STREQUAL "")
         set (ImagesTarget "${target}-Images")
@@ -39,11 +39,6 @@ function(add_images_from_directory target imagesSubFolder)
     endif()
 endfunction()
 
-# set (FontsTarget "${target}-Fonts")
-# juce_add_binary_data(${FontsTarget} SOURCES "${ImagesDir}/*.ttf")
-# target_link_libraries(${target} PRIVATE ${FontsTarget})
-
-
 ##### Torch related
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 include(add_torch)
@@ -51,19 +46,17 @@ list(APPEND CMAKE_PREFIX_PATH "${torch_dir}/libtorch")
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
-
 ##### Juce related
 option(JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
 option(JUCE_BUILD_EXAMPLES "Build JUCE Examples" OFF)
 # As we're getting JUCE via git submodules and not using a possible system JUCE
 add_subdirectory(juce)
 
-
 ##### `juce_add_console_app` adds an executable target with the name passed as the first argument
 # (ConsoleAppExample here). This target is a normal CMake target, but has a lot of extra properties
 # set up by default. This function accepts many optional arguments. Check the readme at
 # `docs/CMake API.md` in the JUCE repo for the full list.
-juce_add_plugin(${target-name}
+juce_add_plugin(${target_name}
     ICON_BIG assets/icon.png                              # ICON_* arguments specify a path to an image file to use as an icon for the Standalone
     ICON_SMALL assets/icon.png
     COMPANY_NAME acids                          # Specify the name of the plugin's author
@@ -86,7 +79,7 @@ juce_generate_juce_header(rave-vst)
 # Finally, we supply a list of source files that will be built into the target. This is a standard
 # CMake command.
 add_subdirectory(source)
-add_images_from_directory(${target-name} assets)
+add_images_from_directory(${target_name} assets)
 
 ##### `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use
@@ -94,7 +87,7 @@ add_images_from_directory(${target-name} assets)
 # need that's not on by default, check the module header for the correct flag to set here. These
 # definitions will be visible both to your code, and also the JUCE module code, so for new
 # definitions, pick unique names that are unlikely to collide! This is a standard CMake command.
-target_compile_definitions(${target-name}
+target_compile_definitions(${target_name}
     PRIVATE
         # JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
         JUCE_WEB_BROWSER=0  # If you remove this, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_console_app` call
@@ -112,7 +105,7 @@ target_compile_definitions(${target-name}
 # juce_add_binary_data(ConsoleAppData SOURCES ...)
 
 ##### Automatically bundle libtorch into the targets
-get_target_property(active_formats ${target-name} JUCE_FORMATS)
+get_target_property(active_formats ${target_name} JUCE_FORMATS)
 if (APPLE)
   set(libtorch_files
     "${TORCH_INSTALL_PREFIX}/lib/libtorch.dylib"
@@ -154,20 +147,11 @@ if (UNIX AND NOT APPLE)
     "${TORCH_INSTALL_PREFIX}/lib/libiomp5.so"
   )
 endif (UNIX AND NOT APPLE)
-##### Windows
-if (MSVC)
-  file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-  add_custom_command(TARGET target-name POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${TORCH_DLLS}
-                     ${base_folder}/)
-endif()
-
 
 #####
 foreach(kind IN LISTS active_formats)
     foreach(resource_file IN LISTS libtorch_files)
-        target_sources(${target-name}_${kind} PRIVATE ${resource_file})
+        target_sources(${target_name}_${kind} PRIVATE ${resource_file})
         set_source_files_properties(${resource_file} PROPERTIES
           MACOSX_PACKAGE_LOCATION "torch/libtorch"
         )
@@ -178,7 +162,7 @@ endforeach()
 # we're linking our executable target to the `juce::juce_core` module. Inter-module dependencies are
 # resolved automatically. If you'd generated a binary data target above, you would need to link to
 # it here too. This is a standard CMake command.
-target_link_libraries(${target-name}
+target_link_libraries(${target_name}
     PRIVATE
         # ConsoleAppData            # If you'd created a binary data target, you'd link to it here
         juce::juce_core
@@ -194,4 +178,14 @@ target_link_libraries(${target-name}
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
 
-set(base_folder "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
+##### Windows
+if (MSVC)
+  set(base_folder "${CMAKE_CURRENT_BINARY_DIR}/rave-vst_artefacts/${CMAKE_BUILD_TYPE}/Standalone")
+  add_custom_target(build-time-make-directory ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${base_folder})
+  file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+  add_custom_command(TARGET ${target_name} POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${TORCH_DLLS}
+                     ${base_folder}/)
+endif()

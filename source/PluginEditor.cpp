@@ -191,7 +191,7 @@ void RaveAPEditor::detectAvailableModels() {
     for (auto &p : std::filesystem::recursive_directory_iterator(
              _modelsDirPath.getFullPathName().toStdString())) {
       if (p.path().extension() == ext) {
-        _availableModelsPaths.add(String(p.path()));
+        _availableModelsPaths.add(String(p.path().string()));
         // Prepare a clean model name for display
         auto tmpModelName = p.path().stem().string();
         std::replace(tmpModelName.begin(), tmpModelName.end(), '_', ' ');

@@ -59,7 +59,7 @@ Tested environments:
 | Fedora 33          | 3.19.7 | G++ 10.3.1   | Standalone            |       |
 
 
-#### 1) Install needed dependencies:
+#### 1) If compiling on Linux, install the needed dependencies:
 - Fedora:  
 `sudo dnf update ; sudo dnf install git cmake g++ libX11-devel libXrandr-devel libXinerama-devel libXcursor-devel freetype-devel libcurl-devel alsa-lib-devel`
 
@@ -75,3 +75,6 @@ Tested environments:
 
 #### 5) Build:  
 `cmake --build . --config Release -j 4`
+
+#### 6) Enjoy!
+The compiled binaries are located in `rave-vst/build/rave-vst_artefacts/Release/`
