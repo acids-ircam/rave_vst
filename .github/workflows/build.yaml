@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  build:
+  ubuntu_build:
     runs-on: ubuntu-20.04
     steps:
       - name: Install needed dependencies
@@ -35,5 +35,30 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: release
+          name: release_Ubuntu
+          path: build/rave-vst_artefacts/Release
+          
+          
+  macos_build:
+    runs-on: macOS-latest
+    steps:
+      - name: Clone the repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setup the build
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        working-directory: build
+        run: cmake --build . --config Release -j 4
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release_MacOS
           path: build/rave-vst_artefacts/Release
