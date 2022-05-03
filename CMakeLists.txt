@@ -110,7 +110,6 @@ if (APPLE)
   set(libtorch_files
     "${TORCH_INSTALL_PREFIX}/lib/libtorch.dylib"
     "${TORCH_INSTALL_PREFIX}/lib/libtorch_cpu.dylib"
-    "${TORCH_INSTALL_PREFIX}/lib/libiomp5.dylib"
     "${TORCH_INSTALL_PREFIX}/lib/libc10.dylib"
   )
 endif (APPLE)

@@ -3,7 +3,7 @@
 Include RAVE models in your DAW for realtime deep learning based processing
 
 - VST / AU / Standalone plugins available
-- Unix & MacOS (We plan to support Windows later on)
+- Unix, MacOS (M1 as well!) & Windows (Windows build is still experimental at this point)
 - Reconstruction & Prior modes available
 
 ![rave_audition](assets/rave_screenshot_audio_panel.png)
@@ -46,20 +46,31 @@ If you want to be able to use your [trained models](https://github.com/acids-irc
 Then use the VST import button to move the files in the correct folder as explained in the previous section
 
 -----
-### 2) How to build
+### 2) How to install
+To get the precompiled binaries
+- Go to the "Actions" panel of this repository
+- Select the last run
+- Download the binaries for your OS
+
+-----
+### 3) How to build
 We use Cmake for the build process  
 PyTorch libraries (And MKL if you're on UNIX) will be downloaded automatically  
 
 Tested environments:
 
-| OS                 | CMake  | C++ Compiler | Available formats     | Notes |
-|--------------------|--------|--------------|-----------------------|-------|
-| MacOS 10.15.7      | 3.21.3 | Clang 11.0.3 | VST / Standalone / AU |       |
-| Ubuntu 20.04.4 LTS |        |              | VST / Standalone      |       |
-| Fedora 33          | 3.19.7 | G++ 10.3.1   | Standalone            |       |
+| OS                     | CMake  | C++ Compiler | Available formats     | Notes        |
+|------------------------|--------|--------------|-----------------------|--------------|
+| **MacOS** 10.15.7      | 3.21.3 | Clang 11.0.3 | VST / Standalone / AU |              |
+| **MacOS M1** 12.3.1    | 3.20.3 | Clang 12.0.0 | VST / Standalone / AU | Clang ARM    |
+| **Ubuntu** 20.04.4 LTS |        | G++ 9.4.0    | VST / Standalone      |              |
+| **Fedora** 33          | 3.19.7 | G++ 10.3.1   | Standalone            |              |
+| **Windows** 10         | 3.23.1 |              | Standalone            | Experimental |
 
 
-#### 1) If compiling on Linux, install the needed dependencies:
+#### 1) If compiling on UNIX, install the needed dependencies:
+- Ubuntu:  
+`sudo apt-get update && sudo apt-get install -y git cmake g++ libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libfreetype-dev libcurl4-openssl-dev libasound2-dev`
 - Fedora:  
 `sudo dnf update ; sudo dnf install git cmake g++ libX11-devel libXrandr-devel libXinerama-devel libXcursor-devel freetype-devel libcurl-devel alsa-lib-devel`
 
@@ -77,4 +88,8 @@ Tested environments:
 `cmake --build . --config Release -j 4`
 
 #### 6) Enjoy!
-The compiled binaries are located in `rave-vst/build/rave-vst_artefacts/Release/`
+The compiled binaries are located in `rave-vst/build/rave-vst_artefacts/Release/`  
+
+- MacOS: `./build/rave-vst_artefacts/Release/Standalone/RAVE.app/Contents/MacOS/RAVE`  
+- UNIX: `./build/rave-vst_artefacts/Release/Standalone/RAVE`  
+- Windows: `./build/rave-vst_artefacts/Release/Standalone/RAVE.exe`  
