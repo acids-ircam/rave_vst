@@ -47,11 +47,19 @@ if (NOT torch_lib)
   endif()
 endif()
 
-# Find the libraries again
-find_library(torch_lib
-  NAMES ${torch_lib_name}
-  PATHS ${torch_dir}/libtorch/lib
-)
+if (UNIX AND APPLE AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+  # Find the libraries again
+  find_library(torch_lib
+    NAMES ${torch_lib_name}
+    PATHS ${torch_dir}/lib/python3.9/site-packages/torch
+  )
+else()
+  find_library(torch_lib
+    NAMES ${torch_lib_name}
+    PATHS ${torch_dir}/libtorch/lib
+  )
+endif()
+
 if (NOT torch_lib)
   message(FATAL_ERROR "torch could not be included")
 endif()
