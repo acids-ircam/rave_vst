@@ -14,12 +14,12 @@ void RaveAP::modelPerform() {
     at::Tensor latent_traj;
     at::Tensor latent_traj_mean;
 
-  #if DEBUG_PERFORM
+#if DEBUG_PERFORM
     std::cout << "exp: " << *_latencyMode << " value: " << input_size << '\n';
     std::cout << "has prior : " << _rave->hasPrior()
               << "; use prior : " << *_usePrior << std::endl;
     std::cout << "temperature : " << *_priorTemperature << std::endl;
-  #endif
+#endif
 
     if (_rave->hasPrior() && *_usePrior) {
       auto n_trajs = pow(2, *_latencyMode) / _rave->getModelRatio();
@@ -29,9 +29,9 @@ void RaveAP::modelPerform() {
       int64_t sizes = {input_size};
       at::Tensor frame = torch::from_blob(_inModel[0].get(), sizes);
       frame = torch::reshape(frame, {1, 1, input_size});
-      #if DEBUG_PERFORM
+#if DEBUG_PERFORM
       std::cout << "Current input size : " << frame.sizes() << std::endl;
-      #endif DEBUG_PERFORM
+#endif DEBUG_PERFORM
       std::vector<torch::Tensor> latent_probs = _rave->encode_amortized(frame);
       latent_traj_mean = latent_probs[0];
       at::Tensor latent_traj_std = latent_probs[1];
@@ -51,7 +51,8 @@ void RaveAP::modelPerform() {
 
     // Latent modifications
     // apply scale and bias
-    int64_t n_dimensions = std::min((int)latent_traj.size(1), (int)AVAILABLE_DIMS);
+    int64_t n_dimensions =
+        std::min((int)latent_traj.size(1), (int)AVAILABLE_DIMS);
     for (int i = 0; i < n_dimensions; i++) {
       // The assert and casting here is needed as I got a:
       // warning: conversion to ‘std::array<std::atomic<float>*,
@@ -107,6 +108,11 @@ void RaveAP::modelPerform() {
     // Decode
     latent_traj = torch::cat({latent_trajL, latent_trajR}, 0);
     at::Tensor out = _rave->decode(latent_traj);
+    // On windows, I don't get why, but the two first dims are swapped (compared
+    // to macOS / UNIX) with the same torch version
+    if (out.sizes()[0] == 2) {
+      out = out.transpose(0, 1);
+    }
     at::Tensor outL = out.index({0, 0, at::indexing::Slice()});
     at::Tensor outR = out.index({0, 1, at::indexing::Slice()});
 
@@ -157,7 +163,7 @@ void RaveAP::processBlock(juce::AudioBuffer<float> &buffer,
       }
     }
   }
-   
+
   // fade parameters
   const muting muteConfig = _fadeScheduler.load();
   if (muteConfig == muting::mute) {
@@ -166,7 +172,6 @@ void RaveAP::processBlock(juce::AudioBuffer<float> &buffer,
     _smoothedFadeInOut.setTargetValue(1.f);
     _isMuted.store(false);
   }
-
 
   juce::dsp::AudioBlock<float> ab(buffer);
   juce::dsp::ProcessContextReplacing<float> context(ab);
@@ -227,10 +232,10 @@ void RaveAP::processBlock(juce::AudioBuffer<float> &buffer,
     out_buffer.clear();
   }
 
-  #if DEBUG
-    std::cout << "buffer out : " << out_buffer.getMagnitude(0, nSamples)
-              << std::endl;
-  #endif
+#if DEBUG
+  std::cout << "buffer out : " << out_buffer.getMagnitude(0, nSamples)
+            << std::endl;
+#endif
 
   _outputGainEffect.process(out_context);
   bool is_limiting = static_cast<bool>((*_limitValue).load());
@@ -240,11 +245,10 @@ void RaveAP::processBlock(juce::AudioBuffer<float> &buffer,
   buffer.copyFrom(0, 0, out_buffer, 0, 0, nSamples);
   if (nChannels == 2)
     buffer.copyFrom(1, 0, out_buffer, 1, 0, nSamples);
-  #if DEBUG_PERFORM
+#if DEBUG_PERFORM
   std::cout << "sortie : " << buffer.getMagnitude(0, nSamples) << std::endl;
-  #endif
+#endif
 }
-
 
 void RaveAP::parameterChanged(const String &parameterID, float newValue) {
   if (parameterID == rave_parameters::input_gain) {
@@ -271,10 +275,12 @@ void RaveAP::updateBufferSizes() {
   float b = validBufferSizes.getEnd();
 
   if (*_latencyMode < a) {
-    std::cout << "to low; setting rate to : "  << static_cast<int>(log2(a)) << std::endl;
+    std::cout << "to low; setting rate to : " << static_cast<int>(log2(a))
+              << std::endl;
     *_latencyMode = static_cast<int>(log2(a));
   } else if (*_latencyMode > b) {
-    std::cout << "to high; setting rate to : "  << static_cast<int>(log2(b)) << std::endl;
+    std::cout << "to high; setting rate to : " << static_cast<int>(log2(b))
+              << std::endl;
     *_latencyMode = static_cast<int>(log2(b));
   }
 }
