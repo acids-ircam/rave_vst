@@ -3,7 +3,7 @@
 Include RAVE models in your DAW for realtime deep learning based processing
 
 - VST / AU / Standalone plugins available
-- Unix, MacOS (M1 as well!) & Windows (Windows build is still experimental at this point)
+- MacOS (M1 works, but you'll need to build yourself) & Unix (Windows build is still experimental at this point)
 - Reconstruction & Prior modes available
 
 ![rave_audition](assets/rave_screenshot_audio_panel.png)
@@ -34,11 +34,14 @@ Those two channels have the same input but the random sampling differences will 
 -----
 ##### Model Explorer
 The Model Explorer Button switches to the model explorer window.   
-- **Model download (Feature not yet available):**  
-When the beta will be over you will be able to download a selection of models directly from the VST  
+- **Model download:**  
+Download models available from our API  
+If you want to submit your own checkpoints to be available via our API please open an issue tagged "enhancement" and we'll gladly serve them :)
 - **Custom models import:**  
-Right now you can use this window to select your custom models, this will put them in the right folder and refresh the available models list  
-If you want to manage yourself your local models, the files are located in ``~/.config/ACIDS/RAVE/`` (UNIX) and ``~/Library/Application Support/ACIDS/RAVE/`` (MacOS)
+Use this to select your custom models in your file explorer, this will put them in the right folder and refresh the available models list.  
+If you want to manage yourself your local models, the files are located in:
+  - ``~/.config/ACIDS/RAVE/`` (UNIX)
+  - ``~/Library/Application Support/ACIDS/RAVE/`` (MacOS)
 
 -----
 ##### Using your own trained models  
