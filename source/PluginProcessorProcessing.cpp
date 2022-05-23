@@ -263,7 +263,8 @@ void RaveAP::parameterChanged(const String &parameterID, float newValue) {
     _dryWetMixerEffect.setWetMixProportion(newValue / 100.f);
   } else if (parameterID == rave_parameters::latency_mode) {
     auto latency_samples = pow(2, *_latencyMode);
-    std::cout << "lantency has changed ??? " << latency_samples << std::endl;
+    std::cout << "[ ] - latency has changed to " << latency_samples
+              << std::endl;
     setLatencySamples(latency_samples);
     _dryWetMixerEffect.setWetLatency(latency_samples);
   }

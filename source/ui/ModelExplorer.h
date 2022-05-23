@@ -42,21 +42,26 @@ public:
 
 class ModelExplorer : public Component, private ListBoxModel {
 public:
-  ModelExplorer() {
+  ModelExplorer() : _aModelIsSelected(false) {
     // GUI
     _modelsList.setTitle("Available Models");
     _modelsList.setRowHeight(20);
     _modelsList.setModel(this); // Tell the listbox where to get its data model
     _modelsList.selectRow(0);
 
-    _descriptionLabel.setText("Model Description:",
-                              NotificationType::dontSendNotification);
-    _descriptionLabel.setJustificationType(Justification::centredLeft);
+    _modelName.setMultiLine(true);
+    _modelName.setReadOnly(true);
+    _modelName.setText("");
+    _info.setMultiLine(true);
+    _info.setReadOnly(true);
+    _info.setText("");
 
+    _descriptionLabel.setText("", NotificationType::dontSendNotification);
+    _descriptionLabel.setJustificationType(Justification::centredLeft);
     _description.setMultiLine(true);
     _description.setReadOnly(true);
     _description.setText(
-        _modelsVariationsData[_modelsList.getSelectedRow()]["Description"]);
+        _ApiModelsData[_modelsList.getSelectedRow()]["Description"]);
 
     _downloadButton.setButtonText("Download model");
 
@@ -65,6 +70,9 @@ public:
     addAndMakeVisible(_importButton);
     addAndMakeVisible(_description);
     addAndMakeVisible(_modelsList);
+
+    addAndMakeVisible(_modelName);
+    addAndMakeVisible(_info);
     addAndMakeVisible(_descriptionLabel);
     addAndMakeVisible(_description);
   }
@@ -120,13 +128,24 @@ public:
     g.setColour(DARKER_STRONG);
     g.fillPath(p);
 
-    // Draw lines
-    auto b_line = b_col2.removeFromTop(UI_TEXT_HEIGHT).toFloat();
-    b_line.removeFromLeft(UI_MARGIN_SIZE);
-    b_line = b_line.removeFromLeft(UI_MARGIN_SIZE * 20);
-    g.setColour(BLACK);
-    Line tmp = Line(b_line.getBottomLeft(), b_line.getBottomRight());
-    g.drawLine(tmp, LINES_THICKNESS);
+    if (_aModelIsSelected) {
+      // Draw lines
+      auto b_line =
+          b_col2.removeFromTop(UI_TEXT_HEIGHT - UI_MARGIN_SIZE / 2).toFloat();
+      b_line.removeFromLeft(UI_MARGIN_SIZE);
+      b_line = b_line.removeFromLeft(UI_MARGIN_SIZE * 20);
+      g.setColour(BLACK);
+      Line tmp = Line(b_line.getBottomLeft(), b_line.getBottomRight());
+      g.drawLine(tmp, LINES_THICKNESS);
+
+      b_col2.removeFromTop(UI_MARGIN_SIZE * 2.3 + UI_TEXT_HEIGHT * 2);
+      b_line = b_col2.removeFromTop(UI_TEXT_HEIGHT).toFloat();
+      b_line.removeFromLeft(UI_MARGIN_SIZE);
+      b_line = b_line.removeFromLeft(UI_MARGIN_SIZE * 20);
+      g.setColour(BLACK);
+      tmp = Line(b_line.getBottomLeft(), b_line.getBottomRight());
+      g.drawLine(tmp, LINES_THICKNESS);
+    }
   }
 
   void paintListBoxItem(int rowNumber, Graphics &g, int width, int height,
@@ -158,9 +177,14 @@ public:
     // We remove 2 UI_MARGIN_SIZE to account for the gutter between the two main
     // parts + the inner gutter between the text and the border
     b_area.removeFromLeft(UI_MARGIN_SIZE * 2);
+
+    _modelName.setBounds(b_area.removeFromTop(UI_TEXT_HEIGHT));
+    b_area.removeFromTop(UI_MARGIN_SIZE);
+    _info.setBounds(b_area.removeFromTop(UI_TEXT_HEIGHT * 2));
+    b_area.removeFromTop(UI_MARGIN_SIZE);
     _descriptionLabel.setBounds(b_area.removeFromTop(UI_TEXT_HEIGHT));
     b_area.removeFromTop(UI_MARGIN_SIZE);
-    _description.setBounds(b_area.removeFromTop(UI_TEXT_HEIGHT * 2));
+    _description.setBounds(b_area.withTrimmedBottom(UI_TEXT_HEIGHT));
 
     auto b_downloadButton =
         b_area.removeFromBottom(UI_BUTTON_HEIGHT + UI_MARGIN_SIZE)
@@ -169,22 +193,32 @@ public:
   }
 
   // The following methods implement the ListBoxModel virtual methods:
-  int getNumRows() override { return _modelsVariationsNames.size(); }
+  int getNumRows() override { return _ApiModelsNames.size(); }
 
   String getNameForRow(int rowNumber) override {
-    return _modelsVariationsNames[rowNumber];
+    return _ApiModelsNames[rowNumber];
   }
 
   void selectedRowsChanged(int /*lastRowselected*/) override {
+    _modelName.setText(_ApiModelsNames[_modelsList.getSelectedRow()] +
+                       " Model");
+    _info.setText(
+        "Version " +
+        String(_ApiModelsData[_modelsList.getSelectedRow()]["Version"]) +
+        " - " + String(_ApiModelsData[_modelsList.getSelectedRow()]["Date"]) +
+        "\nAuthor: " +
+        String(_ApiModelsData[_modelsList.getSelectedRow()]["Author"]));
+    _descriptionLabel.setText("Model Description:",
+                              NotificationType::dontSendNotification);
     _description.setText(
-        _modelsVariationsData[_modelsList.getSelectedRow()]["Description"],
-        NotificationType::dontSendNotification);
+        _ApiModelsData[_modelsList.getSelectedRow()]["Description"]);
+    _aModelIsSelected = true;
   }
 
   // Needs to be public, as the networking is in the parent, which will fill
   // those
-  Array<String> _modelsVariationsNames;
-  Array<NamedValueSet> _modelsVariationsData;
+  Array<String> _ApiModelsNames;
+  Array<NamedValueSet> _ApiModelsData;
   TextButton _downloadButton;
   myListBox _modelsList;
 
@@ -193,6 +227,9 @@ public:
   TextButton _importButton;
 
 private:
+  bool _aModelIsSelected;
+  TextEditor _modelName;
+  TextEditor _info;
   Label _descriptionLabel;
   TextEditor _description;
 

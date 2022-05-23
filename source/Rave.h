@@ -32,44 +32,37 @@ public:
     this->has_prior = false;
     this->prior_params = torch::zeros({0});
 
+    std::cout << "[ ] RAVE - Model successfully loaded: " << rave_model_file
+              << std::endl;
+
     for (auto const &i : named_buffers) {
+      if (i.name == "_rave.sampling_rate") {
+        this->sr = i.value.item<int>();
+        std::cout << "\tSampling rate: " << this->sr << std::endl;
+      }
       if (i.name == "_rave.latent_size") {
         this->latent_size = i.value.item<int>();
-        std::cout << "[ ] RAVE - Latent size " << this->latent_size
-                  << std::endl;
+        std::cout << "\tLatent size: " << this->latent_size << std::endl;
       }
       if (i.name == "encode_params") {
         this->encode_params = i.value;
-        std::cout << "[ ] RAVE - Encode parameters " << this->encode_params
+        std::cout << "\tEncode parameters: " << this->encode_params
                   << std::endl;
       }
       if (i.name == "decode_params") {
         this->decode_params = i.value;
-        std::cout << "[ ] RAVE - Decode parameters " << this->decode_params
+        std::cout << "\tDecode parameters: " << this->decode_params
                   << std::endl;
-      }
-      if (i.name == "_rave.sampling_rate") {
-        this->sr = i.value.item<int>();
-        std::cout << "[ ] RAVE - Sampling rate: " << this->sr << std::endl;
       }
       if (i.name == "prior_params") {
         this->prior_params = i.value;
         this->has_prior = true;
-        std::cout << "[ ] RAVE - Prior parameters " << this->prior_params
-                  << std::endl;
-      } 
+        std::cout << "\tPrior parameters: " << this->prior_params << std::endl;
+      }
     }
-    std::cout << "[+] RAVE - Model successfully loaded: " << rave_model_file
+    std::cout << "\tFull latent size: " << getFullLatentDimensions()
               << std::endl;
-
-    std::cout << " - sr : " << sr << std::endl
-              << " - latent size : " << latent_size << std::endl;
-    std::cout << " - full latent size : " << getFullLatentDimensions()
-              << std::endl;
-    std::cout << " - ratio" << getModelRatio() << std::endl;
-    if (has_prior) {
-      std::cout << "- prior parameters" << prior_params << std::endl;
-    }
+    std::cout << "\tRatio: " << getModelRatio() << std::endl;
     c10::InferenceMode guard;
     inputs_rave.clear();
     inputs_rave.push_back(torch::ones({1, 1, getModelRatio()}));
@@ -144,9 +137,7 @@ public:
 
   int getOutputBatches() { return decode_params.index({3}).item<int>(); }
 
-  void resetLatentBuffer() {
-    latent_buffer = torch::zeros({0});
-  }
+  void resetLatentBuffer() { latent_buffer = torch::zeros({0}); }
 
   void writeLatentBuffer(at::Tensor latent) {
     if (latent_buffer.size(0) == 0) {
@@ -160,9 +151,7 @@ public:
     }
   }
 
-  bool hasPrior() {
-    return has_prior; 
-  }
+  bool hasPrior() { return has_prior; }
 
   at::Tensor getLatentBuffer() { return latent_buffer; }
 

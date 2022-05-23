@@ -311,20 +311,20 @@ public:
 
   void setModel(RAVE *_rave) { 
     _model = _rave; 
-    updateModel();
-  }
-
-  void updateModel() {
-    if (_model != nullptr) {
-      setPriorEnabled(_model->hasPrior());
-    }
   }
 
   void setSampleRate(double sampleRate) { _sr = sampleRate; }
 
   void setPriorEnabled(bool value) {
-    _togglePrior.setToggleState(value, juce::dontSendNotification);  
-    _togglePrior.setEnabled(value);
+      if (!value) {
+          _togglePrior.setToggleState(false, juce::dontSendNotification);
+          _togglePrior.setEnabled(false);
+          return;
+      }
+      if (_model != nullptr && _model->hasPrior()) {
+          _togglePrior.setToggleState(true, juce::dontSendNotification);
+          _togglePrior.setEnabled(true);
+      }
   }
 
 private:

@@ -5,8 +5,8 @@ RaveAPEditor::RaveAPEditor(RaveAP &p, AudioProcessorValueTreeState &vts)
     : AudioProcessorEditor(&p), ChangeListener(), _lightLookAndFeel(),
       _darkLookAndFeel(), audioProcessor(p), _avts(vts), _foldablePanel(p),
       _bgFull(ImageCache::getFromMemory(BinaryData::bg_full_png,
-                                        BinaryData::bg_full_pngSize)) {
-
+                                        BinaryData::bg_full_pngSize)),
+      _apiRoot(getApiRoot()) {
   String path =
       juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
           .getFullPathName();
@@ -16,7 +16,6 @@ RaveAPEditor::RaveAPEditor(RaveAP &p, AudioProcessorValueTreeState &vts)
     path += String("/Application Support");
   path += String("/ACIDS/RAVE/");
 
-  std::cout << path << '\n';
   _modelsDirPath = File(path);
   if (_modelsDirPath.isDirectory() == false) {
     _modelsDirPath.createDirectory();
@@ -150,7 +149,6 @@ void RaveAPEditor::paint(juce::Graphics &g) {
 void RaveAPEditor::log(String /*str*/) {}
 
 void RaveAPEditor::changeListenerCallback(ChangeBroadcaster * /*source*/) {
-  _modelPanel.updateModel();
   if (audioProcessor._rave != nullptr) {
     // std::cout << "set prior in changeListenerCallback to" <<
     // audioProcessor._rave->hasPrior() << std::endl;

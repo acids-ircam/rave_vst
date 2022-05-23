@@ -14,8 +14,8 @@
 using namespace juce;
 
 class RaveAPEditor : public juce::AudioProcessorEditor,
-                     // public juce::Timer,
-                     public juce::ChangeListener {
+                     public juce::ChangeListener,
+                     public juce::URL::DownloadTaskListener {
 public:
   RaveAPEditor(RaveAP &, AudioProcessorValueTreeState &);
   ~RaveAPEditor() override;
@@ -25,10 +25,9 @@ public:
   void log(String str);
   void changeListenerCallback(ChangeBroadcaster *source) override;
 
-  /*
-  protected:
-    void timerCallback() override;
-  */
+  void finished(URL::DownloadTask *task, bool success) override;
+  void progress(URL::DownloadTask *task, int64 bytesDownloaded,
+                int64 totalLength) override;
 
 private:
   void getAvailableModelsFromAPI();
@@ -36,6 +35,7 @@ private:
   String getCleanedString(String str);
   void detectAvailableModels();
   void importModel();
+  String getApiRoot();
 
   File _modelsDirPath;
   std::unique_ptr<FileChooser> _fc;
@@ -59,6 +59,8 @@ private:
   StringArray _availableModels;
 
   juce::var _parsedJson;
+
+  String _apiRoot;
 
   static size_t WriteCallback(void *contents, size_t size, size_t nmemb,
                               void *userp) {
