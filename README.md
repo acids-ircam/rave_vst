@@ -62,13 +62,14 @@ PyTorch libraries (And MKL if you're on UNIX) will be downloaded automatically
 
 Tested environments:
 
-| OS                     | CMake  | C++ Compiler | Available formats     | Notes        |
-|------------------------|--------|--------------|-----------------------|--------------|
-| **MacOS** 10.15.7      | 3.21.3 | Clang 11.0.3 | VST / Standalone / AU |              |
-| **MacOS M1** 12.3.1    | 3.20.3 | Clang 12.0.0 | VST / Standalone / AU | Clang ARM    |
-| **Ubuntu** 20.04.4 LTS |        | G++ 9.4.0    | VST / Standalone      |              |
-| **Fedora** 33          | 3.19.7 | G++ 10.3.1   | Standalone            |              |
-| **Windows** 10         | 3.23.1 |              | Standalone            | Experimental |
+| OS                     | CMake  | C++ Compiler | Available formats     | Notes                                  |
+|------------------------|--------|--------------|-----------------------|----------------------------------------|
+| **MacOS** 10.15.7      | 3.21.3 | Clang 11.0.3 | VST / Standalone / AU |                                        |
+| **MacOS M1** 12.3.1    | 3.20.3 | Clang 12.0.0 | VST / Standalone / AU | Clang ARM                              |
+| **Ubuntu** 20.04.4 LTS |        | G++ 9.4.0    | VST / Standalone      |                                        |
+| **Arch Linux**         | 3.23.2 | G++ 12.1.0   | VST / Standalone      | use JUCE:develop branch, see issue #19 |
+| **Fedora** 33          | 3.19.7 | G++ 10.3.1   | Standalone            |                                        |
+| **Windows** 10         | 3.23.1 |              | Standalone            | Experimental                           |
 
 
 #### 1) If compiling on UNIX, install the needed dependencies:
@@ -76,12 +77,15 @@ Tested environments:
 `sudo apt-get update && sudo apt-get install -y git cmake g++ libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libfreetype-dev libcurl4-openssl-dev libasound2-dev`
 - Fedora:  
 `sudo dnf update ; sudo dnf install git cmake g++ libX11-devel libXrandr-devel libXinerama-devel libXcursor-devel freetype-devel libcurl-devel alsa-lib-devel`
+- Arch Linux:
+`sudo pacman -S git cmake gcc libx11 libxrandr libxinerama libxcursor freetype2 libcurl-compat alsa-lib` (or libcurl-gnutls)
 
 #### 2) Clone the repository:
 `cd {YOUR_INSTALL_FOLDER} ; git clone git@github.com:acids-ircam/rave_vst.git ; cd rave_vst`
 
 #### 3) Get Juce:  
-`git submodule update --init --recursive --progress`
+- Ubuntu / Fedora 33: `git submodule update --init --recursive --progress`
+- Arch Linux: `git clone -b develop --single-branch https://github.com/juce-framework/JUCE; mv JUCE juce`
 
 #### 4) Setup the build:  
 `mkdir build; cd build`  
