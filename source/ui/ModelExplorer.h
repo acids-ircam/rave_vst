@@ -204,10 +204,10 @@ public:
                        " Model");
     _info.setText(
         "Version " +
-        String(_ApiModelsData[_modelsList.getSelectedRow()]["Version"]) +
-        " - " + String(_ApiModelsData[_modelsList.getSelectedRow()]["Date"]) +
+        _ApiModelsData[_modelsList.getSelectedRow()]["Version"].toString() +
+        " - " + _ApiModelsData[_modelsList.getSelectedRow()]["Date"].toString() +
         "\nAuthor: " +
-        String(_ApiModelsData[_modelsList.getSelectedRow()]["Author"]));
+        _ApiModelsData[_modelsList.getSelectedRow()]["Author"].toString());
     _descriptionLabel.setText("Model Description:",
                               NotificationType::dontSendNotification);
     _description.setText(
