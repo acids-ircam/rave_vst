@@ -95,7 +95,7 @@ Tested environments:
 `cmake --build . --config Release -j 4`
 
 #### 6) Enjoy!
-The compiled binaries are located in `rave-vst/build/rave-vst_artefacts/Release/`  
+Once the build process finished you'll find the compiled binaries located in `rave-vst/build/rave-vst_artefacts/Release/`  
 
 - MacOS: `./build/rave-vst_artefacts/Release/Standalone/RAVE.app/Contents/MacOS/RAVE`  
 - UNIX: `./build/rave-vst_artefacts/Release/Standalone/RAVE`  
