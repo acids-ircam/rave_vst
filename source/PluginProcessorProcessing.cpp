@@ -89,38 +89,45 @@ void RaveAP::modelPerform() {
 #endif
 
     // filling missing dimensions with width parameter
-    torch::Tensor latent_trajL = latent_traj,
-                  latent_trajR = latent_traj.clone();
-    int missing_dims = _rave->getFullLatentDimensions() - latent_trajL.size(1);
-    float width = _widthValue->load() / 100.f;
-    at::Tensor latent_noiseL =
-        torch::randn({1, missing_dims, latent_trajL.size(2)});
-    at::Tensor latent_noiseR =
-        (1 - width) * latent_noiseL +
-        width * torch::randn({1, missing_dims, latent_trajL.size(2)});
+    int missing_dims = _rave->getFullLatentDimensions() - latent_traj.size(1);
 
-#if DEBUG_PERFORM
-    std::cout << "after width : " << latent_noiseL.sizes() << ";"
-              << latent_trajL.sizes() << std::endl;
-#endif
+    if (_rave->isStereo() && missing_dims > 0) {
+      torch::Tensor latent_trajL = latent_traj,
+                    latent_trajR = latent_traj.clone();
+      int missing_dims = _rave->getFullLatentDimensions() - latent_trajL.size(1);
+      float width = _widthValue->load() / 100.f;
+      at::Tensor latent_noiseL =
+          torch::randn({1, missing_dims, latent_trajL.size(2)});
+      at::Tensor latent_noiseR =
+          (1 - width) * latent_noiseL +
+          width * torch::randn({1, missing_dims, latent_trajL.size(2)});
 
-    latent_trajL = torch::cat({latent_trajL, latent_noiseL}, 1);
-    latent_trajR = torch::cat({latent_trajR, latent_noiseR}, 1);
+  #if DEBUG_PERFORM
+      std::cout << "after width : " << latent_noiseL.sizes() << ";"
+                << latent_trajL.sizes() << std::endl;
+  #endif
 
-#if DEBUG_PERFORM
-    std::cout << "latent processed" << std::endl;
-#endif
+      latent_trajL = torch::cat({latent_trajL, latent_noiseL}, 1);
+      latent_trajR = torch::cat({latent_trajR, latent_noiseR}, 1);
+
+  #if DEBUG_PERFORM
+      std::cout << "latent processed" << std::endl;
+  #endif
+
+      latent_traj = torch::cat({latent_trajL, latent_trajR}, 0);
+    }
 
     // Decode
-    latent_traj = torch::cat({latent_trajL, latent_trajR}, 0);
     at::Tensor out = _rave->decode(latent_traj);
     // On windows, I don't get why, but the two first dims are swapped (compared
     // to macOS / UNIX) with the same torch version
     if (out.sizes()[0] == 2) {
       out = out.transpose(0, 1);
     }
+
+    const int outIndexR = (out.sizes()[1] > 1 ? 1 : 0);
     at::Tensor outL = out.index({0, 0, at::indexing::Slice()});
-    at::Tensor outR = out.index({0, 1, at::indexing::Slice()});
+    at::Tensor outR = out.index({0, outIndexR, at::indexing::Slice()});
 
 #if DEBUG_PERFORM
     std::cout << "latent decoded" << std::endl;

@@ -29,11 +29,19 @@ public:
 
     this->model_path = juce::String(rave_model_file);
     auto named_buffers = this->model.named_buffers();
+    auto named_attributes = this->model.named_attributes();
     this->has_prior = false;
     this->prior_params = torch::zeros({0});
 
     std::cout << "[ ] RAVE - Model successfully loaded: " << rave_model_file
               << std::endl;
+
+    for (auto const& i : named_attributes) {
+      if (i.name == "_rave.stereo") {
+        stereo = i.value.toBool();
+        std::cout << "Stereo?" << (stereo ? "true" : "false") << std::endl;
+      }
+    }
 
     for (auto const &i : named_buffers) {
       if (i.name == "_rave.sampling_rate") {
@@ -153,6 +161,8 @@ public:
 
   bool hasPrior() { return has_prior; }
 
+  bool isStereo() const { return stereo; }
+
   at::Tensor getLatentBuffer() { return latent_buffer; }
 
   bool hasMethod(const std::string& methodName) const {
@@ -164,6 +174,7 @@ private:
   int sr;
   int latent_size;
   bool has_prior = false;
+  bool stereo;
   juce::String model_path;
   at::Tensor encode_params;
   at::Tensor decode_params;
