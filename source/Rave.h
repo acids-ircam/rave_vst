@@ -217,7 +217,7 @@ private:
   int sr;
   int latent_size;
   bool has_prior = false;
-  bool stereo;
+  bool stereo = false;
   juce::String model_path;
   at::Tensor encode_params;
   at::Tensor decode_params;
