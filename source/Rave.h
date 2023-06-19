@@ -37,15 +37,21 @@ public:
               << std::endl;
 
     bool found_model_as_attribute = false;
+    bool found_stereo_attribute = false;
     for (auto const& attr : named_attributes) {
       if (attr.name == "_rave") {
         found_model_as_attribute = true;
         std::cout << "Found _rave model as named attribute" << std::endl;
       }
       else if (attr.name == "stereo" || attr.name == "_rave.stereo") {
+        found_stereo_attribute = true;
         stereo = attr.value.toBool();
         std::cout << "Stereo?" << (stereo ? "true" : "false") << std::endl;
       }
+    }
+
+    if (!found_stereo_attribute) {
+      stereo = false;
     }
 
     if (found_model_as_attribute) {
