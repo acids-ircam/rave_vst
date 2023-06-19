@@ -165,8 +165,8 @@ public:
 
   at::Tensor getLatentBuffer() { return latent_buffer; }
 
-  bool hasMethod(const std::string& methodName) const {
-    return this->model.find_method(methodName).has_value();
+  bool hasMethod(const std::string& method_name) const {
+    return this->model.find_method(method_name).has_value();
   }
 
 private:
