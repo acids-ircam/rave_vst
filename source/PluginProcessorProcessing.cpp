@@ -32,17 +32,23 @@ void RaveAP::modelPerform() {
 #if DEBUG_PERFORM
       std::cout << "Current input size : " << frame.sizes() << std::endl;
 #endif DEBUG_PERFORM
-      std::vector<torch::Tensor> latent_probs = _rave->encode_amortized(frame);
-      latent_traj_mean = latent_probs[0];
-      at::Tensor latent_traj_std = latent_probs[1];
 
-#if DEBUG_PERFORM
-      std::cout << "mean shape" << latent_traj_mean.sizes() << std::endl;
-      std::cout << "std shape" << latent_traj_std.sizes() << std::endl;
-#endif
+      if (_rave->hasMethod("encode_amortized")) {
+        std::vector<torch::Tensor> latent_probs = _rave->encode_amortized(frame);
+        latent_traj_mean = latent_probs[0];
+        at::Tensor latent_traj_std = latent_probs[1];
 
-      latent_traj = latent_traj_mean +
-                    latent_traj_std * torch::randn_like(latent_traj_mean);
+  #if DEBUG_PERFORM
+        std::cout << "mean shape" << latent_traj_mean.sizes() << std::endl;
+        std::cout << "std shape" << latent_traj_std.sizes() << std::endl;
+  #endif
+
+        latent_traj = latent_traj_mean +
+                      latent_traj_std * torch::randn_like(latent_traj_mean);
+      } else {
+        latent_traj = _rave->encode(frame);
+        latent_traj_mean = latent_traj;
+      }
     }
 
 #if DEBUG_PERFORM

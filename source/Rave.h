@@ -155,6 +155,10 @@ public:
 
   at::Tensor getLatentBuffer() { return latent_buffer; }
 
+  bool hasMethod(const std::string& methodName) const {
+    return this->model.find_method(methodName).has_value();
+  }
+
 private:
   torch::jit::Module model;
   int sr;
