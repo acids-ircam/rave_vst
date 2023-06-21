@@ -29,37 +29,88 @@ public:
 
     this->model_path = juce::String(rave_model_file);
     auto named_buffers = this->model.named_buffers();
+    auto named_attributes = this->model.named_attributes();
     this->has_prior = false;
     this->prior_params = torch::zeros({0});
 
     std::cout << "[ ] RAVE - Model successfully loaded: " << rave_model_file
               << std::endl;
 
-    for (auto const &i : named_buffers) {
-      if (i.name == "_rave.sampling_rate") {
-        this->sr = i.value.item<int>();
-        std::cout << "\tSampling rate: " << this->sr << std::endl;
+    bool found_model_as_attribute = false;
+    bool found_stereo_attribute = false;
+    for (auto const& attr : named_attributes) {
+      if (attr.name == "_rave") {
+        found_model_as_attribute = true;
+        std::cout << "Found _rave model as named attribute" << std::endl;
       }
-      if (i.name == "_rave.latent_size") {
-        this->latent_size = i.value.item<int>();
-        std::cout << "\tLatent size: " << this->latent_size << std::endl;
-      }
-      if (i.name == "encode_params") {
-        this->encode_params = i.value;
-        std::cout << "\tEncode parameters: " << this->encode_params
-                  << std::endl;
-      }
-      if (i.name == "decode_params") {
-        this->decode_params = i.value;
-        std::cout << "\tDecode parameters: " << this->decode_params
-                  << std::endl;
-      }
-      if (i.name == "prior_params") {
-        this->prior_params = i.value;
-        this->has_prior = true;
-        std::cout << "\tPrior parameters: " << this->prior_params << std::endl;
+      else if (attr.name == "stereo" || attr.name == "_rave.stereo") {
+        found_stereo_attribute = true;
+        stereo = attr.value.toBool();
+        std::cout << "Stereo?" << (stereo ? "true" : "false") << std::endl;
       }
     }
+
+    if (!found_stereo_attribute) {
+      stereo = false;
+    }
+
+    if (found_model_as_attribute) {
+      // Use named buffers within _rave
+      for (auto const& buf : named_buffers) {
+        if (buf.name == "_rave.sampling_rate") {
+          this->sr = buf.value.item<int>();
+          std::cout << "\tSampling rate: " << this->sr << std::endl;
+        }
+        else if (buf.name == "_rave.latent_size") {
+          this->latent_size = buf.value.item<int>();
+          std::cout << "\tLatent size: " << this->latent_size << std::endl;
+        }
+        else if (buf.name == "encode_params") {
+          this->encode_params = buf.value;
+          std::cout << "\tEncode parameters: " << this->encode_params
+                    << std::endl;
+        }
+        else if (buf.name == "decode_params") {
+          this->decode_params = buf.value;
+          std::cout << "\tDecode parameters: " << this->decode_params
+                    << std::endl;
+        }
+        else if (buf.name == "prior_params") {
+          this->prior_params = buf.value;
+          this->has_prior = true;
+          std::cout << "\tPrior parameters: " << this->prior_params << std::endl;
+        }
+      }
+    }
+    else {
+      // Use top-level named attributes
+      for (auto const& attr : named_attributes) {
+        if (attr.name == "sampling_rate") {
+          this->sr = attr.value.toInt();
+          std::cout << "\tSampling rate: " << this->sr << std::endl;
+        }
+        else if (attr.name == "full_latent_size") {
+          this->latent_size = attr.value.toInt();
+          std::cout << "\tLatent size: " << this->latent_size << std::endl;
+        }
+        else if (attr.name == "encode_params") {
+          this->encode_params = attr.value.toTensor();
+          std::cout << "\tEncode parameters: " << this->encode_params
+            << std::endl;
+        }
+        else if (attr.name == "decode_params") {
+          this->decode_params = attr.value.toTensor();
+          std::cout << "\tDecode parameters: " << this->decode_params
+            << std::endl;
+        }
+        else if (attr.name == "prior_params") {
+          this->prior_params = attr.value.toTensor();
+          this->has_prior = true;
+          std::cout << "\tPrior parameters: " << this->prior_params << std::endl;
+        }
+      }
+    }
+
     std::cout << "\tFull latent size: " << getFullLatentDimensions()
               << std::endl;
     std::cout << "\tRatio: " << getModelRatio() << std::endl;
@@ -153,13 +204,20 @@ public:
 
   bool hasPrior() { return has_prior; }
 
+  bool isStereo() const { return stereo; }
+
   at::Tensor getLatentBuffer() { return latent_buffer; }
+
+  bool hasMethod(const std::string& method_name) const {
+    return this->model.find_method(method_name).has_value();
+  }
 
 private:
   torch::jit::Module model;
   int sr;
   int latent_size;
   bool has_prior = false;
+  bool stereo = false;
   juce::String model_path;
   at::Tensor encode_params;
   at::Tensor decode_params;
