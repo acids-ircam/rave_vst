@@ -1,5 +1,10 @@
 # RAVE VST (BETA)
 -----
+
+## This project has been archived
+
+You should not expect any update or support for this project until further notice. If you are interested in getting RAVE to run in realtime, consider using [nn~](https://github.com/acids-ircam/nn_tilde) !
+
 Include RAVE models in your DAW for realtime deep learning based processing
 
 - VST / AU / Standalone plugins available
